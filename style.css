@@ -1,0 +1,36 @@
+body {
+    background-color: #050505; color: #00f2ff;
+    font-family: 'Courier New', monospace;
+    display: flex; justify-content: center; align-items: center;
+    height: 100vh; margin: 0; overflow: hidden;
+}
+#game-container { position: relative; border: 3px solid #00f2ff; box-shadow: 0 0 15px #00f2ff; }
+#ui-layer {
+    position: absolute; top: 0; width: 100%;
+    display: flex; justify-content: space-around;
+    padding: 10px 0; background: rgba(0, 0, 0, 0.8); z-index: 5;
+}
+.overlay {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(0, 10, 20, 0.95); border: 2px solid #00f2ff;
+    padding: 30px; text-align: center; z-index: 100; width: 400px;
+}
+.menu-btn, .upgrade-btn {
+    display: block; width: 100%; margin: 8px 0; padding: 12px;
+    background: transparent; border: 1px solid #00f2ff; color: #00f2ff;
+    cursor: pointer; transition: 0.2s; font-family: inherit; font-weight: bold;
+}
+.menu-btn:hover, .upgrade-btn:hover:not(:disabled) { background: #00f2ff; color: #000; }
+.upgrade-btn:disabled { border-color: #444; color: #444; cursor: not-allowed; }
+.price-tag { float: right; color: #ffcc00; }
+.hidden { display: none; }
+#xp-bar-container { position: absolute; top: 45px; left: 5%; width: 90%; height: 6px; background: #111; }
+#xp-bar { width: 0%; height: 100%; background: #fff; box-shadow: 0 0 10px #fff; transition: width 0.3s; }
+#msg-log { position: absolute; bottom: 10px; width: 100%; text-align: center; font-size: 12px; }
+canvas { background-color: #000; cursor: crosshair; }
+h1 { margin-top: 0; letter-spacing: 5px; text-shadow: 0 0 10px #00f2ff; }
+#leaderboard {
+    margin: 20px 0;
+    padding: 15px;
+    border: 1px dashed #00f2ff;
+}

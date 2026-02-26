@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Clean: Roguelike Pro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <audio id="bgMusic" loop>
+            <source src="Pixel Dash Gauntlet.mp3" type="audio/mpeg">
+        </audio>
+
+        <div id="main-menu" class="overlay">
+            <h1>DEEP CLEAN</h1>
+            <p>Janitor vs. The Germs</p>
+            <button id="start-btn" class="menu-btn">START SHIFT</button>
+        </div>
+
+        <div id="pause-menu" class="overlay hidden">
+            <h2>SHIFT PAUSED</h2>
+            <button id="resume-btn" class="menu-btn">CONTINUE</button>
+            <button id="quit-btn" class="menu-btn">MAIN MENU</button>
+        </div>
+
+        <div id="upgrade-menu" class="overlay hidden">
+            <h2>SHIFT UPGRADE</h2>
+            <p>Select an item to purchase:</p>
+            <div id="upgrade-options"></div>
+            <button id="reroll-btn" class="upgrade-btn" style="border-color: #ffcc00; color: #ffcc00;">
+                Reroll (Costs <span id="reroll-cost">15</span> Gold)
+            </button>
+        </div>
+
+        <div id="game-over" class="overlay hidden">
+            <h2>SHIFT TERMINATED</h2>
+            <p>The office is too dirty.</p>
+            <div id="leaderboard">
+                <p>Wave Reached: <span id="final-wave">0</span></p>
+                <p>All-Time Record: Wave <span id="high-wave">0</span></p>
+            </div>
+            <button id="restart-btn" class="menu-btn">START NEW SHIFT</button>
+        </div>
+
+        <div id="ui-layer">
+            <div class="stat-box">HP: <span id="hp">100</span></div>
+            <div class="stat-box">Gold: $<span id="gold">50</span></div>
+            <div class="stat-box">Wave: <span id="wave">1</span></div>
+            <div id="xp-container">
+                <div id="xp-bar"></div>
+            </div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
