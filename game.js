@@ -5,6 +5,7 @@ canvas.width = 800; canvas.height = 600;
 // --- Game State ---
 let gameState = 'MENU';
 let player, projectiles, enemies, explosions, wave, spawnedCount, lastShot;
+let bossProjectiles = []; 
 let rerollCost = 15;
 let keys = {};
 let mouse = { x: 0, y: 0 };
@@ -22,12 +23,14 @@ let currentTrackIndex = 0;
 
 function playCurrentTrack() {
     const track = playlist[currentTrackIndex];
-    track.volume = 0.4;
-    track.play().catch(e => console.log("Playback blocked"));
+    if (track) {
+        track.volume = 0.4;
+        track.play().catch(e => console.log("Playback blocked"));
+    }
 }
 
 function pauseCurrentTrack() {
-    playlist[currentTrackIndex].pause();
+    if (playlist[currentTrackIndex]) playlist[currentTrackIndex].pause();
 }
 
 function nextTrack() {
@@ -37,9 +40,8 @@ function nextTrack() {
     playCurrentTrack();
 }
 
-// Set up automatic transitions
 playlist.forEach(track => {
-    track.addEventListener('ended', nextTrack);
+    if (track) track.addEventListener('ended', nextTrack);
 });
 
 // --- Background Settings ---
@@ -71,19 +73,28 @@ function drawEnvironment() {
     ctx.fillText(`LOCATION: ${bg.name.toUpperCase()}`, canvas.width - 20, canvas.height - 20);
 }
 
-function initGame() {
+function initGame(startWave = 1, isCheat = false) {
     player = {
         x: 400, y: 300, r: 18, hp: 100, maxHp: 100, 
         speed: 4, fireDelay: 400, damage: 10,
-        gold: 50, armor: 1,
-        killsInWave: 0, targetKills: 8,
+        gold: isCheat ? 5000 : 50,
+        armor: 1,
+        killsInWave: 0, targetKills: 8 + (startWave * 5),
         ricochet: 0, explosive: false, explosiveLevel: 0, 
-        recoveryRate: 0, // New stat replacing lifeSteal
+        recoveryRate: 0, 
         multiShot: 1 
     };
-    projectiles = []; enemies = []; explosions = [];
-    wave = 1; spawnedCount = 0; lastShot = 0; rerollCost = 15;
-    ALL_UPGRADES.forEach(u => { u.level = 0; u.cost = u.baseCost; });
+    projectiles = []; enemies = []; explosions = []; bossProjectiles = [];
+    wave = startWave; spawnedCount = 0; lastShot = 0; rerollCost = 15;
+
+    // Reset and apply cheat levels
+    ALL_UPGRADES.forEach(u => { 
+        u.level = 0; u.cost = u.baseCost; u.maxed = false; 
+        if (isCheat) {
+            for(let i=0; i<3; i++) { u.action(u); } // Apply 3 times
+        }
+    });
+
     gameState = 'PLAYING';
 }
 
@@ -104,7 +115,7 @@ const ALL_UPGRADES = [
             opt.cost = Math.floor(opt.cost * 1.8);
             if (player.recoveryRate >= 1.0) {
                 player.recoveryRate = 1.0;
-                opt.maxed = true; // Flag to exclude from random pool
+                opt.maxed = true; 
             }
         } 
     }
@@ -123,18 +134,27 @@ document.getElementById('start-btn').onclick = () => {
     initGame();
 };
 
+document.getElementById('code-btn').onclick = () => {
+    const code = prompt("Enter Cheat Code:");
+    if (code === 'clean25') {
+        document.getElementById('main-menu').classList.add('hidden');
+        playCurrentTrack();
+        initGame(25, true);
+    } else {
+        alert("Invalid Code");
+    }
+};
+
 document.getElementById('resume-btn').onclick = () => togglePause();
 document.getElementById('quit-btn').onclick = () => {
     document.getElementById('pause-menu').classList.add('hidden');
     document.getElementById('main-menu').classList.remove('hidden');
     pauseCurrentTrack();
-    playlist[currentTrackIndex].currentTime = 0;
     gameState = 'MENU';
 };
 
 document.getElementById('restart-btn').onclick = () => {
     document.getElementById('game-over').classList.add('hidden');
-    playlist[currentTrackIndex].currentTime = 0;
     playCurrentTrack();
     initGame();
 };
@@ -153,11 +173,22 @@ function togglePause() {
 
 function spawnEnemy(xParam, yParam, typeOverride) {
     if (gameState !== 'PLAYING') return;
+    
+    // Boss Spawn every 25 waves
     if (wave % 25 === 0 && spawnedCount === 0 && !typeOverride) {
-        enemies.push({ x: canvas.width/2, y: -100, r: 60, hp: 1000 + (wave * 50), maxHp: 1000 + (wave * 50), speed: 0.5, emoji: '👑', color: '#ff0000', isBoss: true, lastSpawn: 0 });
-        spawnedCount = player.targetKills; return;
+        enemies.push({ 
+            x: canvas.width/2, y: -100, r: 60, 
+            hp: 1000 + (wave * 100), maxHp: 1000 + (wave * 100), 
+            speed: 0.5, emoji: '👑', color: '#ff0000', 
+            isBoss: true, lastSpawn: 0, lastShot: 0 
+        });
+        spawnedCount = 1; // Count the boss as 1
+        return;
     }
+
+    // Don't spawn normal mobs if we reached target, unless it's a boss minion
     if (!typeOverride && spawnedCount >= player.targetKills) return;
+
     let x = xParam, y = yParam;
     if (x === undefined) {
         const edge = Math.floor(Math.random() * 4);
@@ -166,13 +197,16 @@ function spawnEnemy(xParam, yParam, typeOverride) {
         else if (edge === 2) { x = -40; y = Math.random() * canvas.height; }
         else { x = canvas.width + 40; y = Math.random() * canvas.height; }
     }
-    let hp = 10 + (wave*3);
-    let type = { r: 15, hp: hp, maxHp: hp, speed: 1.2 + (wave*0.1), emoji: '🦠', color: '#00ff00' };
+
+    let hp = 10 + (wave * 3);
+    let type = { r: 15, hp: hp, maxHp: hp, speed: 1.2 + (wave * 0.1), emoji: '🦠', color: '#00ff00' };
+    
     if (wave > 10 && Math.random() > 0.5) { type.color = '#ff8800'; type.hp *= 1.5; type.emoji = '👾'; }
     if (wave >= 10 && Math.random() > 0.85) { type = { r: 20, hp: hp * 1.2, maxHp: hp * 1.2, speed: 1.0, emoji: '🧽', color: '#00ffff', splits: true }; }
     else if (wave >= 15 && Math.random() > 0.9) { type = { r: 15, hp: hp * 2, maxHp: hp * 2, speed: 1.5, emoji: '🐍', color: '#2ecc71', isSnake: true, tail: [] }; }
-    else if (wave >= 3 && Math.random() > 0.8) { hp = 8 + wave; type = { r: 12, hp: hp, maxHp: hp, speed: 2.8 + (wave*0.1), emoji: '🧪', color: '#ff00ff' }; }
-    else if (wave >= 5 && Math.random() > 0.85) { hp = 50 + (wave*10); type = { r: 25, hp: hp, maxHp: hp, speed: 0.8, emoji: '💩', color: '#8b4513' }; }
+    else if (wave >= 3 && Math.random() > 0.8) { hp = 8 + wave; type = { r: 12, hp: hp, maxHp: hp, speed: 2.8 + (wave * 0.1), emoji: '🧪', color: '#ff00ff' }; }
+    else if (wave >= 5 && Math.random() > 0.85) { hp = 50 + (wave * 10); type = { r: 25, hp: hp, maxHp: hp, speed: 0.8, emoji: '💩', color: '#8b4513' }; }
+    
     enemies.push({ x, y, ... (typeOverride || type) });
     if (!typeOverride) spawnedCount++;
 }
@@ -213,6 +247,7 @@ function update() {
     if (keys['a'] && player.x > player.r) player.x -= player.speed;
     if (keys['d'] && player.x < canvas.width - player.r) player.x += player.speed;
 
+    // Player Projectiles
     for (let i = projectiles.length - 1; i >= 0; i--) {
         const p = projectiles[i];
         p.x += p.vx; p.y += p.vy;
@@ -233,34 +268,76 @@ function update() {
         }
     }
 
+    // Boss Projectiles (Purple Balls)
+    for (let i = bossProjectiles.length - 1; i >= 0; i--) {
+        const bp = bossProjectiles[i];
+        bp.x += bp.vx; bp.y += bp.vy;
+        if (bp.x < -50 || bp.x > canvas.width + 50 || bp.y < -50 || bp.y > canvas.height + 50) {
+            bossProjectiles.splice(i, 1); continue;
+        }
+        if (Math.hypot(bp.x - player.x, bp.y - player.y) < bp.r + player.r) {
+            player.hp -= 10;
+            bossProjectiles.splice(i, 1);
+            if (player.hp <= 0) showGameOver();
+        }
+    }
+
     for (let i = enemies.length - 1; i >= 0; i--) {
         const en = enemies[i];
         const dist = Math.hypot(player.x - en.x, player.y - en.y);
         en.x += (player.x - en.x) / dist * en.speed;
         en.y += (player.y - en.y) / dist * en.speed;
+        
         if (en.isSnake) {
             en.tail.push({x: en.x, y: en.y});
             if (en.tail.length > 50) en.tail.shift();
             en.tail.forEach(t => { if (Math.hypot(player.x - t.x, player.y - t.y) < player.r + 5) player.hp -= 0.5; });
         }
-        if (en.isBoss && Date.now() - en.lastSpawn > 3000) {
-            spawnEnemy(en.x, en.y, { r: 12, hp: 20, maxHp: 20, speed: 2, emoji: '🦠', color: '#ff0000' });
-            en.lastSpawn = Date.now();
+
+        if (en.isBoss) {
+            // Boss Spawning Minions - FASTER
+            if (Date.now() - en.lastSpawn > 1500) {
+                spawnEnemy(en.x, en.y, { r: 12, hp: 25, maxHp: 25, speed: 2.2, emoji: '🦠', color: '#ff0000' });
+                en.lastSpawn = Date.now();
+            }
+            // Boss Shooting Purple Balls - FASTER
+            if (Date.now() - en.lastShot > 1000) {
+                const angle = Math.atan2(player.y - en.y, player.x - en.x);
+                bossProjectiles.push({
+                    x: en.x, y: en.y, 
+                    vx: Math.cos(angle) * 5, vy: Math.sin(angle) * 5, 
+                    r: 12, color: '#a020f0' 
+                });
+                en.lastShot = Date.now();
+            }
         }
+
         if (dist < player.r + en.r) { player.hp -= 0.7; if (player.hp <= 0) showGameOver(); }
+        
         if (en.hp <= 0) {
             if (en.splits) {
                 for(let k=0; k<2; k++) spawnEnemy(en.x + (Math.random()*20-10), en.y + (Math.random()*20-10), { r: 10, hp: 15, maxHp: 15, speed: 1.8, emoji: '🦠', color: '#00ffff' });
             }
-            enemies.splice(i, 1); player.killsInWave++; player.gold += 10;
-            if (player.killsInWave >= player.targetKills && enemies.length === 0) showUpgradeMenu();
+            const reward = en.isBoss ? 1000 : 10;
+            const wasBoss = en.isBoss;
+            enemies.splice(i, 1); 
+            player.killsInWave++; 
+            player.gold += reward;
+
+            // FIX: If it was the boss, kill all other enemies and clear boss projectiles
+            if (wasBoss) {
+                enemies = [];
+                bossProjectiles = [];
+                showUpgradeMenu();
+            } else if (player.killsInWave >= player.targetKills && enemies.length === 0) {
+                showUpgradeMenu();
+            }
         }
     }
     explosions.forEach((ex, i) => { ex.r += 5; ex.alpha -= 0.04; if (ex.alpha <= 0) explosions.splice(i, 1); });
 }
 
 function showUpgradeMenu() {
-    // Apply Post-Shift Recovery heal before showing menu
     if (player.hp < player.maxHp && player.recoveryRate > 0) {
         const missingHp = player.maxHp - player.hp;
         player.hp += missingHp * player.recoveryRate;
@@ -274,7 +351,6 @@ function showUpgradeMenu() {
     cont.innerHTML = '';
     menu.classList.remove('hidden');
     
-    // Filter out maxed upgrades (like 100% recovery)
     const availableUpgrades = ALL_UPGRADES.filter(u => !u.maxed);
     const options = [...availableUpgrades].sort(() => 0.5 - Math.random()).slice(0, 3);
     
@@ -290,9 +366,13 @@ function showUpgradeMenu() {
 
 function hideUpgradeMenu() {
     document.getElementById('upgrade-menu').classList.add('hidden');
-    wave++; player.killsInWave = 0; spawnedCount = 0;
+    wave++; 
+    player.killsInWave = 0; 
+    spawnedCount = 0;
     player.targetKills = 8 + (wave * 5);
-    rerollCost += 5; gameState = 'PLAYING';
+    rerollCost += 5; 
+    bossProjectiles = []; 
+    gameState = 'PLAYING';
 }
 
 document.getElementById('reroll-btn').onclick = () => { if (Date.now() - menuActiveTime < 1000) return; if (player.gold >= rerollCost) { player.gold -= rerollCost; rerollCost = Math.floor(rerollCost * 1.5); showUpgradeMenu(); } };
@@ -303,6 +383,7 @@ function draw() {
         drawEnvironment();
         ctx.font = '30px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText('🧹', player.x, player.y);
+        
         enemies.forEach(en => {
             if (en.isSnake) {
                 ctx.fillStyle = 'rgba(46, 204, 113, 0.3)';
@@ -313,9 +394,20 @@ function draw() {
             ctx.fillStyle = '#333'; ctx.fillRect(en.x - 15, en.y - en.r - 10, 30, 4);
             ctx.fillStyle = en.color; ctx.fillRect(en.x - 15, en.y - en.r - 10, (en.hp / en.maxHp) * 30, 4);
         });
+
+        // Draw Player Projectiles
         ctx.fillStyle = '#00f2ff';
         projectiles.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); });
+
+        // Draw Boss Projectiles
+        bossProjectiles.forEach(bp => {
+            ctx.fillStyle = bp.color;
+            ctx.beginPath(); ctx.arc(bp.x, bp.y, bp.r, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
+        });
+
         explosions.forEach(ex => { ctx.strokeStyle = `rgba(255, 255, 255, ${ex.alpha})`; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(ex.x, ex.y, ex.r, 0, Math.PI * 2); ctx.stroke(); });
+        
         document.getElementById('hp').innerText = Math.max(0, Math.floor(player.hp));
         document.getElementById('wave').innerText = wave;
         document.getElementById('gold').innerText = player.gold;
@@ -325,5 +417,5 @@ function draw() {
     requestAnimationFrame(draw);
 }
 
-setInterval(spawnEnemy, 1000);
+setInterval(() => { if (gameState === 'PLAYING') spawnEnemy(); }, 1000);
 draw();
