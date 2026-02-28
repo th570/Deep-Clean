@@ -24,7 +24,7 @@ body {
 .upgrade-btn:disabled { border-color: #444; color: #444; cursor: not-allowed; }
 .price-tag { float: right; color: #ffcc00; }
 .hidden { display: none; }
-#xp-bar-container { position: absolute; top: 45px; left: 5%; width: 90%; height: 6px; background: #111; }
+#xp-container { position: absolute; top: 45px; left: 5%; width: 90%; height: 6px; background: #111; }
 #xp-bar { width: 0%; height: 100%; background: #fff; box-shadow: 0 0 10px #fff; transition: width 0.3s; }
 #msg-log { position: absolute; bottom: 10px; width: 100%; text-align: center; font-size: 12px; }
 canvas { background-color: #000; cursor: crosshair; }
