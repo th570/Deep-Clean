@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deep Clean: Roguelike Pro</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
@@ -13,47 +14,86 @@
         <audio id="bgMusic3"><source src="Rogue Rush.mp3" type="audio/mpeg"></audio>
         <audio id="bgMusic4"><source src="Rogue Rush 2.mp3" type="audio/mpeg"></audio>
 
+        <div class="scanner-line"></div>
+
         <div id="main-menu" class="overlay">
-            <h1>DEEP CLEAN</h1>
-            <p>Janitor vs. The Germs</p>
-            <button id="start-btn" class="menu-btn">START SHIFT</button>
-            <button id="code-btn" class="menu-btn" style="margin-top: 10px; background: #444; font-size: 0.8em;">USE CODE</button>
+            <div class="logo-container">
+                <h1 class="glitch" data-text="DEEP CLEAN">DEEP CLEAN</h1>
+                <p class="subtitle">SANITATION PROTOCOL v2.0</p>
+            </div>
+            
+            <div class="controls-legend">
+                <div class="ctrl-item"><span>WASD</span> MOVE</div>
+                <div class="ctrl-item"><span>L-CLICK</span> SHOOT</div>
+                <div class="ctrl-item"><span>R-CLICK</span> BUG BOMB</div>
+                <div class="ctrl-item"><span>SPACE</span> DASH</div>
+            </div>
+
+            <div class="menu-actions">
+                <button id="start-btn" class="menu-btn primary">INITIATE SHIFT</button>
+                <button id="code-btn" class="menu-btn secondary">ACCESS TERMINAL</button>
+            </div>
         </div>
 
         <div id="pause-menu" class="overlay hidden">
-            <h2>SHIFT PAUSED</h2>
-            <button id="resume-btn" class="menu-btn">CONTINUE</button>
-            <button id="quit-btn" class="menu-btn">MAIN MENU</button>
+            <h2 class="glow-text">SHIFT PAUSED</h2>
+            <div class="volume-control">
+                <label>AUDIO GAIN</label>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.4">
+            </div>
+            <div class="menu-actions">
+                <button id="resume-btn" class="menu-btn primary">RESUME PROTOCOL</button>
+                <button id="quit-btn" class="menu-btn secondary">ABORT TO LOBBY</button>
+            </div>
         </div>
 
         <div id="upgrade-menu" class="overlay hidden">
-            <h2>SHIFT UPGRADE</h2>
-            <p>Select an item to purchase:</p>
+            <h2 class="glow-text">UPGRADE EQUIPMENT</h2>
+            <p class="instruction">Select tactical improvement:</p>
             <div id="upgrade-options"></div>
-            <button id="reroll-btn" class="upgrade-btn" style="border-color: #ffcc00; color: #ffcc00;">
-                Reroll (Costs <span id="reroll-cost">15</span> Gold)
-            </button>
-            <button id="skip-btn" class="upgrade-btn" style="border-color: #888; color: #888; margin-top: 15px;">
-                Skip & Continue Shift
-            </button>
+            <div class="upgrade-footer">
+                <button id="reroll-btn" class="action-link">
+                    🔄 Reroll Terminal (<span id="reroll-cost">15</span>G)
+                </button>
+                <button id="skip-btn" class="action-link gray">
+                    Skip & Deploy →
+                </button>
+            </div>
         </div>
 
         <div id="game-over" class="overlay hidden">
-            <h2>SHIFT TERMINATED</h2>
-            <p>The office is too dirty.</p>
+            <h2 class="danger-text">CRITICAL FAILURE</h2>
+            <p>Contamination levels exceeded safety limits.</p>
             <div id="leaderboard">
-                <p>Wave Reached: <span id="final-wave">0</span></p>
-                <p>All-Time Record: Wave <span id="high-wave">0</span></p>
+                <div class="stat-row"><span>WAVE REACHED:</span> <span id="final-wave" class="val">0</span></div>
+                <div class="stat-row"><span>SECTOR RECORD:</span> <span id="high-wave" class="val">0</span></div>
             </div>
-            <button id="restart-btn" class="menu-btn">START NEW SHIFT</button>
+            <button id="restart-btn" class="menu-btn primary">RE-INITIALIZE</button>
         </div>
 
-        <div id="ui-layer">
-            <div class="stat-box">HP: <span id="hp">100</span></div>
-            <div class="stat-box">Gold: $<span id="gold">50</span></div>
-            <div class="stat-box">Wave: <span id="wave">1</span></div>
+        <div id="hud">
+            <div class="hud-top">
+                <div class="hud-group">
+                    <label>INTEGRITY</label>
+                    <div class="bar-bg hp-bg"><div id="hp-bar-fill" class="bar-fill hp-fill"></div></div>
+                    <span id="hp">100</span>%
+                </div>
+                <div class="hud-group center">
+                    <label>SECTOR</label>
+                    <div id="wave">1</div>
+                    <div id="enemy-count" style="font-size: 10px; color: #ff3e3e;">ENEMIES: 0</div>
+                </div>
+                <div class="hud-group right">
+                    <label>CREDITS</label>
+                    <div id="gold-display">$<span id="gold">50</span></div>
+                    <div id="dash-status" style="font-size: 10px; color: #00f2ff;">DASH READY</div>
+                </div>
+            </div>
             <div id="xp-container">
                 <div id="xp-bar"></div>
+            </div>
+            <div class="hud-controls-hint">
+                [WASD] MOVE | [L-CLICK] FIRE | [R-CLICK] BOMB | [SPACE] DASH
             </div>
         </div>
         <canvas id="gameCanvas"></canvas>
