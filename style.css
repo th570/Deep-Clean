@@ -3,14 +3,14 @@
     --neon-purple: #bc13fe;
     --danger: #ff3e3e;
     --gold: #ffcc00;
-    --bg-dark: #020b14;
-    --glass: rgba(0, 20, 40, 0.85);
+    --bg-dark: #071624; /* Brightened slightly */
+    --glass: rgba(0, 20, 40, 0.95);
     --rare: #bc13fe;
     --legendary: #ffcc00;
 }
 
 body {
-    background-color: #000;
+    background-color: #0c0c0c;
     color: var(--neon-blue);
     font-family: 'Rajdhani', sans-serif;
     display: flex; justify-content: center; align-items: center;
@@ -20,8 +20,8 @@ body {
 
 #game-container { 
     position: relative; 
-    border: 1px solid rgba(0, 242, 255, 0.3);
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 242, 255, 0.1);
+    border: 2px solid rgba(0, 242, 255, 0.6);
+    box-shadow: 0 0 50px rgba(0, 242, 255, 0.3), inset 0 0 20px rgba(0, 242, 255, 0.15);
     background: var(--bg-dark);
     overflow: hidden;
     width: 800px;
@@ -31,7 +31,7 @@ body {
 .scanner-line {
     position: absolute; width: 100%; height: 2px;
     background: linear-gradient(to right, transparent, var(--neon-blue), transparent);
-    opacity: 0.2; z-index: 2; pointer-events: none;
+    opacity: 0.3; z-index: 2; pointer-events: none;
     animation: scan 4s linear infinite;
 }
 
@@ -49,52 +49,43 @@ body {
 .hud-group { display: flex; flex-direction: column; min-width: 100px; }
 .hud-group.right { text-align: right; }
 .hud-group.center { text-align: center; font-size: 1.5em; font-weight: bold; }
-.hud-group label { font-size: 10px; letter-spacing: 2px; color: rgba(0, 242, 255, 0.6); }
+.hud-group label { font-size: 10px; letter-spacing: 2px; color: rgba(0, 242, 255, 0.9); }
 
-.bar-bg { width: 120px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin-top: 4px; }
+.bar-bg { width: 120px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; margin-top: 4px; }
 .bar-fill { height: 100%; transition: width 0.3s ease; }
 .hp-fill { background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
 
 #xp-container { 
     width: 100%; 
-    height: 3px; 
-    background: rgba(255,255,255,0.05); 
+    height: 4px; 
+    background: rgba(255,255,255,0.15); 
     overflow: hidden;
     box-sizing: border-box;
 }
 #xp-bar { width: 0%; height: 100%; background: var(--gold); box-shadow: 0 0 8px var(--gold); }
 
-/* Controls Hint on HUD */
-.hud-controls-hint {
-    font-size: 9px;
-    color: rgba(255, 255, 255, 0.3);
-    margin-top: 5px;
-    letter-spacing: 1px;
-}
-
 .overlay {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     background: var(--glass); 
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(0, 242, 255, 0.2);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(0, 242, 255, 0.5);
     padding: 40px; text-align: center; z-index: 100; width: 420px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.95);
     box-sizing: border-box;
 }
 
-/* Controls Legend in Main Menu */
 .controls-legend {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 15px;
     margin: 20px 0;
-    padding: 15px;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px dashed rgba(0, 242, 255, 0.2);
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px dashed rgba(0, 242, 255, 0.4);
 }
 
 .ctrl-item {
-    font-size: 11px;
+    font-size: 13px;
     color: #fff;
     text-align: left;
 }
@@ -102,7 +93,9 @@ body {
 .ctrl-item span {
     color: var(--neon-blue);
     font-weight: bold;
-    margin-right: 5px;
+    margin-right: 8px;
+    display: inline-block;
+    min-width: 60px;
 }
 
 .volume-control { margin-bottom: 20px; text-align: left; }
@@ -114,16 +107,17 @@ body {
 .menu-btn {
     display: block; width: 100%; padding: 15px; margin: 10px 0;
     font-family: 'Orbitron', sans-serif; font-size: 14px;
-    background: transparent; border: 1px solid var(--neon-blue); color: var(--neon-blue); cursor: pointer; transition: 0.3s;
+    background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon-blue); color: var(--neon-blue); cursor: pointer; transition: 0.3s;
 }
 
 .menu-btn.primary { border: 1px solid var(--neon-blue); color: var(--neon-blue); }
 .menu-btn.primary:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue); }
-.menu-btn.secondary { border: 1px solid rgba(255,255,255,0.2); color: #888; font-size: 11px; }
+.menu-btn.secondary { border: 1px solid rgba(255,255,255,0.4); color: #bbb; font-size: 11px; }
+.menu-btn:hover:not(.secondary) { background: rgba(0, 242, 255, 0.1); }
 
 .upgrade-btn {
     display: block; width: 100%; margin-bottom: 12px; padding: 15px;
-    background: rgba(255,255,255,0.03); border: 1px solid rgba(0, 242, 255, 0.1);
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(0, 242, 255, 0.2);
     color: #fff; text-align: left; cursor: pointer; transition: 0.2s;
     box-sizing: border-box;
 }
@@ -133,7 +127,7 @@ body {
 .upgrade-btn.rarity-legendary { border-left: 4px solid var(--legendary); }
 
 .upgrade-btn:hover:not(:disabled) { 
-    background: rgba(255, 255, 255, 0.1); 
+    background: rgba(255, 255, 255, 0.2); 
     transform: translateX(5px);
 }
 
@@ -148,15 +142,15 @@ body {
     background: none; border: none; color: var(--gold); cursor: pointer; 
     font-family: inherit; font-size: 12px; margin: 0 10px; 
 }
-.action-link.gray { color: #666; }
+.action-link.gray { color: #888; }
 
-h1.glitch { font-family: 'Orbitron', sans-serif; font-size: 3rem; margin: 0; color: #fff; }
+h1.glitch { font-family: 'Orbitron', sans-serif; font-size: 3rem; margin: 0; color: #fff; text-shadow: 0 0 10px var(--neon-blue); }
 .subtitle { letter-spacing: 4px; color: var(--neon-blue); font-size: 12px; margin-top: -5px; margin-bottom: 30px; }
 .glow-text { color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue); }
 .danger-text { color: var(--danger); text-shadow: 0 0 15px var(--danger); }
 
-#leaderboard { margin: 25px 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
-.stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #888; }
+#leaderboard { margin: 25px 0; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px; }
+.stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #bbb; }
 .stat-row .val { color: #fff; font-weight: bold; }
 
-canvas { background-color: #000; cursor: none; }
+canvas { background-color: #050e17; cursor: none; }

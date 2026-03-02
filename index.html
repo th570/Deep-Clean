@@ -22,15 +22,9 @@
                 <p class="subtitle">SANITATION PROTOCOL v2.0</p>
             </div>
             
-            <div class="controls-legend">
-                <div class="ctrl-item"><span>WASD</span> MOVE</div>
-                <div class="ctrl-item"><span>L-CLICK</span> SHOOT</div>
-                <div class="ctrl-item"><span>R-CLICK</span> BUG BOMB</div>
-                <div class="ctrl-item"><span>SPACE</span> DASH</div>
-            </div>
-
             <div class="menu-actions">
                 <button id="start-btn" class="menu-btn primary">INITIATE SHIFT</button>
+                <button id="main-ctrl-btn" class="menu-btn">CONTROLS</button>
                 <button id="code-btn" class="menu-btn secondary">ACCESS TERMINAL</button>
             </div>
         </div>
@@ -43,8 +37,20 @@
             </div>
             <div class="menu-actions">
                 <button id="resume-btn" class="menu-btn primary">RESUME PROTOCOL</button>
+                <button id="ctrl-menu-btn" class="menu-btn">CONTROLS</button>
                 <button id="quit-btn" class="menu-btn secondary">ABORT TO LOBBY</button>
             </div>
+        </div>
+
+        <div id="controls-menu" class="overlay hidden">
+            <h2 class="glow-text">OPERATIONAL GUIDE</h2>
+            <div class="controls-legend">
+                <div class="ctrl-item"><span>WASD</span> MOVE</div>
+                <div class="ctrl-item"><span>L-CLICK</span> SHOOT</div>
+                <div class="ctrl-item"><span>R-CLICK</span> BUG BOMB</div>
+                <div class="ctrl-item"><span>SPACE</span> DASH</div>
+            </div>
+            <button id="back-to-prev-btn" class="menu-btn primary">BACK</button>
         </div>
 
         <div id="upgrade-menu" class="overlay hidden">
@@ -91,9 +97,6 @@
             </div>
             <div id="xp-container">
                 <div id="xp-bar"></div>
-            </div>
-            <div class="hud-controls-hint">
-                [WASD] MOVE | [L-CLICK] FIRE | [R-CLICK] BOMB | [SPACE] DASH
             </div>
         </div>
         <canvas id="gameCanvas"></canvas>

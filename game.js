@@ -17,6 +17,9 @@ let screenShake = 0;
 let lastDash = 0;
 const DASH_COOLDOWN = 2000;
 
+// Track where the control menu was opened from
+let controlsOpenedFrom = 'MENU';
+
 // --- Bug Bomb State ---
 let bombs = [];
 let bombsPlacedInCycle = 0;
@@ -59,10 +62,10 @@ if (playlist) {
 }
 
 const backgrounds = [
-    { name: 'Executive Lobby', color1: '#020b14', color2: '#00f2ff' },
-    { name: 'Digital Classroom', color1: '#051008', color2: '#2ecc71' },
-    { name: 'Sanitized Wing', color1: '#0a0a0a', color2: '#ffffff' },
-    { name: 'Industrial Kitchen', color1: '#140d02', color2: '#ffcc00' }
+    { name: 'Executive Lobby', color1: '#0a1d2e', color2: '#00f2ff' },
+    { name: 'Digital Classroom', color1: '#0e2b16', color2: '#2ecc71' },
+    { name: 'Sanitized Wing', color1: '#1a1a1a', color2: '#ffffff' },
+    { name: 'Industrial Kitchen', color1: '#2b1c08', color2: '#ffcc00' }
 ];
 
 function drawEnvironment() {
@@ -76,7 +79,7 @@ function drawEnvironment() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     ctx.strokeStyle = bg.color2;
-    ctx.globalAlpha = 0.05;
+    ctx.globalAlpha = 0.18; 
     ctx.lineWidth = 1;
     const tileSize = 50;
     for (let x = 0; x < canvas.width; x += tileSize) {
@@ -165,6 +168,12 @@ document.getElementById('start-btn').onclick = () => {
     initGame();
 };
 
+document.getElementById('main-ctrl-btn').onclick = () => {
+    controlsOpenedFrom = 'MENU';
+    document.getElementById('main-menu').classList.add('hidden');
+    document.getElementById('controls-menu').classList.remove('hidden');
+};
+
 document.getElementById('code-btn').onclick = () => {
     const code = prompt("ENTER OVERRIDE CODE:");
     if (code === 'clean25') {
@@ -179,6 +188,22 @@ document.getElementById('code-btn').onclick = () => {
 };
 
 document.getElementById('resume-btn').onclick = () => togglePause();
+
+document.getElementById('ctrl-menu-btn').onclick = () => {
+    controlsOpenedFrom = 'PAUSE';
+    document.getElementById('pause-menu').classList.add('hidden');
+    document.getElementById('controls-menu').classList.remove('hidden');
+};
+
+document.getElementById('back-to-prev-btn').onclick = () => {
+    document.getElementById('controls-menu').classList.add('hidden');
+    if (controlsOpenedFrom === 'MENU') {
+        document.getElementById('main-menu').classList.remove('hidden');
+    } else {
+        document.getElementById('pause-menu').classList.remove('hidden');
+    }
+};
+
 document.getElementById('quit-btn').onclick = () => {
     document.getElementById('pause-menu').classList.add('hidden');
     document.getElementById('main-menu').classList.remove('hidden');
@@ -201,6 +226,7 @@ function togglePause() {
         gameState = 'PLAYING';
         playCurrentTrack();
         document.getElementById('pause-menu').classList.add('hidden');
+        document.getElementById('controls-menu').classList.add('hidden');
     }
 }
 
@@ -208,13 +234,11 @@ function deployBugBomb() {
     if (gameState !== 'PLAYING' || player.bugBombLevel <= 0) return;
     
     const now = Date.now();
-    // Check if we are in cooldown
     if (bombsPlacedInCycle >= player.bugBombLevel && now - lastBombTime < BOMB_COOLDOWN) {
-        addFloatingText(player.x, player.y - 30, "RECHARGING", "#555");
+        addFloatingText(player.x, player.y - 30, "RECHARGING", "#888");
         return;
     }
 
-    // Reset cycle if cooldown passed
     if (now - lastBombTime >= BOMB_COOLDOWN) {
         bombsPlacedInCycle = 0;
     }
@@ -223,7 +247,7 @@ function deployBugBomb() {
         bombs.push({
             x: player.x,
             y: player.y,
-            timer: 2000, // 2 seconds to explode
+            timer: 2000,
             radius: 12,
             spawnTime: now
         });
@@ -257,12 +281,14 @@ function spawnEnemy(xParam, yParam, typeOverride) {
 
     if (wave % 25 === 0 && spawnedCount === 0 && !typeOverride) {
         const bossCount = Math.floor(wave / 25);
+        const bossHp = 2000 + (wave * 200); 
         for (let i = 0; i < bossCount; i++) {
             enemies.push({ 
                 x: (canvas.width / (bossCount + 1)) * (i + 1), y: -100, r: 60, 
-                hp: 1000 + (wave * 100), maxHp: 1000 + (wave * 100), 
+                hp: bossHp, maxHp: bossHp, 
                 speed: 0.5, emoji: '👑', color: '#ff3e3e', 
-                isBoss: true, lastSpawn: 0, lastShot: 0 
+                isBoss: true, lastSpawn: 0, lastShot: 0,
+                isEnraged: false, shotDelay: 1000
             });
         }
         spawnedCount = 1;
@@ -306,15 +332,12 @@ function shoot() {
 }
 
 function createExplosion(x, y, isBig = false) {
-    // FIX: Bomb uses a specific radius (180), regular combustion uses player upgrade radius
     const blastRadius = isBig ? 180 : (60 + (player.explosiveLevel * 20));
-    
     explosions.push({ x, y, r: 5, maxR: blastRadius, alpha: 1, color: isBig ? '#bc13fe' : '#ffffff' });
     screenShake = isBig ? 15 : 8;
     
     enemies.forEach(en => { 
         const dist = Math.hypot(en.x - x, en.y - y);
-        // Only do damage if the enemy is actually within the visual circle
         if (dist < blastRadius) { 
             const dmg = player.damage * (isBig ? 4 : 0.8);
             en.hp -= dmg; 
@@ -342,7 +365,6 @@ function update() {
     if (keys['a'] && player.x > player.r) player.x -= player.speed;
     if (keys['d'] && player.x < canvas.width - player.r) player.x += player.speed;
 
-    // Update Bombs
     bombs.forEach((b, i) => {
         if (Date.now() - b.spawnTime > b.timer) {
             createExplosion(b.x, b.y, true);
@@ -391,8 +413,20 @@ function update() {
         }
 
         if (en.isBoss) {
-            if (Date.now() - en.lastSpawn > 1500) { spawnEnemy(en.x, en.y, { r: 12, hp: 25, maxHp: 25, speed: 2.2, emoji: '🦠', color: '#ff3e3e' }); en.lastSpawn = Date.now(); }
-            if (Date.now() - en.lastShot > 1000) {
+            if (!en.isEnraged && en.hp < en.maxHp * 0.5) {
+                en.isEnraged = true;
+                en.speed *= 2.0;
+                en.shotDelay = 500;
+                en.emoji = '😡';
+                addFloatingText(en.x, en.y - 40, "BOSS ENRAGED!", "#ff3e3e");
+                screenShake = 20;
+            }
+
+            if (Date.now() - en.lastSpawn > (en.isEnraged ? 750 : 1500)) { 
+                spawnEnemy(en.x, en.y, { r: 12, hp: 25, maxHp: 25, speed: 2.2, emoji: '🦠', color: '#ff3e3e' }); 
+                en.lastSpawn = Date.now(); 
+            }
+            if (Date.now() - en.lastShot > en.shotDelay) {
                 const angle = Math.atan2(player.y - en.y, player.x - en.x);
                 bossProjectiles.push({ x: en.x, y: en.y, vx: Math.cos(angle) * 5, vy: Math.sin(angle) * 5, r: 12, color: '#bc13fe' });
                 en.lastShot = Date.now();
@@ -456,7 +490,7 @@ function draw() {
         drawEnvironment();
 
         ctx.strokeStyle = (Date.now() - lastShot < player.fireDelay) ? '#ff3e3e' : '#00f2ff';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.arc(mouse.x, mouse.y, 10, 0, Math.PI*2);
         ctx.moveTo(mouse.x - 15, mouse.y); ctx.lineTo(mouse.x + 15, mouse.y);
@@ -467,12 +501,12 @@ function draw() {
         ctx.font = '30px serif'; ctx.textAlign = 'center'; ctx.fillText('🧹', player.x, player.y);
         ctx.shadowBlur = 0;
         
-        // Draw Bombs
         bombs.forEach(b => {
             const pulse = Math.sin(Date.now() / 100) * 5;
             ctx.font = `${20 + pulse}px serif`;
             ctx.fillText('💣', b.x, b.y);
             ctx.strokeStyle = '#bc13fe';
+            ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(b.x, b.y, 25, 0, Math.PI * 2);
             ctx.stroke();
@@ -480,23 +514,23 @@ function draw() {
 
         enemies.forEach(en => {
             if (en.isSnake) {
-                ctx.fillStyle = 'rgba(46, 204, 113, 0.2)';
+                ctx.fillStyle = 'rgba(46, 204, 113, 0.3)';
                 en.tail.forEach(t => { ctx.beginPath(); ctx.arc(t.x, t.y, 5, 0, Math.PI*2); ctx.fill(); });
             }
             ctx.font = `${en.r * 2.2}px serif`; ctx.fillText(en.emoji, en.x, en.y);
-            ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(en.x - 15, en.y - en.r - 10, 30, 3);
-            ctx.fillStyle = en.color; ctx.fillRect(en.x - 15, en.y - en.r - 10, (en.hp / en.maxHp) * 30, 3);
+            ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(en.x - 15, en.y - en.r - 10, 30, 4);
+            ctx.fillStyle = en.color; ctx.fillRect(en.x - 15, en.y - en.r - 10, (en.hp / en.maxHp) * 30, 4);
         });
 
         projectiles.forEach(p => { 
             ctx.fillStyle = '#00f2ff';
-            ctx.shadowBlur = 8; ctx.shadowColor = '#00f2ff';
+            ctx.shadowBlur = 12; ctx.shadowColor = '#00f2ff';
             ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
             ctx.shadowBlur = 0;
         });
 
         bossProjectiles.forEach(bp => {
-            ctx.fillStyle = bp.color; ctx.shadowBlur = 10; ctx.shadowColor = bp.color;
+            ctx.fillStyle = bp.color; ctx.shadowBlur = 15; ctx.shadowColor = bp.color;
             ctx.beginPath(); ctx.arc(bp.x, bp.y, bp.r, 0, Math.PI * 2); ctx.fill();
             ctx.shadowBlur = 0;
         });
@@ -527,14 +561,13 @@ function draw() {
         
         const dashReady = (Date.now() - lastDash >= DASH_COOLDOWN);
         document.getElementById('dash-status').innerText = dashReady ? "DASH READY [SPACE]" : "RECHARGING...";
-        document.getElementById('dash-status').style.color = dashReady ? "#00f2ff" : "#555";
+        document.getElementById('dash-status').style.color = dashReady ? "#00f2ff" : "#888";
 
-        // Show Bomb Cooldown on HUD if player has it
         if (player.bugBombLevel > 0) {
             const bombReady = (bombsPlacedInCycle < player.bugBombLevel || Date.now() - lastBombTime >= BOMB_COOLDOWN);
             const status = bombReady ? `BOMBS: ${player.bugBombLevel - (Date.now() - lastBombTime < BOMB_COOLDOWN ? bombsPlacedInCycle : 0)}` : "BOMBS RELOADING...";
-            ctx.fillStyle = bombReady ? "#bc13fe" : "#555";
-            ctx.font = "12px Orbitron";
+            ctx.fillStyle = bombReady ? "#bc13fe" : "#888";
+            ctx.font = "bold 12px Orbitron";
             ctx.textAlign = "right";
             ctx.fillText(status, canvas.width - 20, canvas.height - 20);
         }
